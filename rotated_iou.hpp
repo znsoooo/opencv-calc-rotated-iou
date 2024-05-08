@@ -2,6 +2,8 @@
 
 #define CV_PI 3.1415926535897932384626433832795
 
+#define CV_Assert(...)
+#define CV_INSTRUMENT_REGION()
 
 typedef struct {
     int x, y, width, height;
@@ -11,18 +13,44 @@ typedef struct {
     float width, height;
 } Size2f;
 
-typedef struct {
-    float x, y;
-} Point2f;
+class Point2f
+{
+public:
+    Point2f() = default;
+    Point2f(float _x, float _y) : x(_x),  y(_y) {}
 
-typedef struct {
-    Point2f center; //< the rectangle mass center
-    Size2f size;    //< width and height of the rectangle
-    float angle;    //< the rotation angle. When the angle is 0, 90, 180, 270 etc., the rectangle becomes an up-right rectangle.
-} RotatedRect;
+    float x = 0.f;
+    float y = 0.f;
+
+    Point2f operator-(const Point2f& other) const {
+        return Point2f(x - other.x, y - other.y);
+    }
+
+    float cross(const Point2f& other) const {
+        return x * other.y - y * other.x;
+    }
+};
+
+class RotatedRect
+{
+public:
+    Point2f center;
+    Size2f size;
+    float angle;
+
+    void points(Point2f pts[]) const;
+    void points(std::vector<Point2f>& pts) const;
+};
 
 int rotatedRectangleIntersection(const RotatedRect& r1, const RotatedRect& r2, std::vector<Point2f>& int_pts);
 int convexHull(const std::vector<Point2f>& int_pts, std::vector<Point2f>& order_pts, bool ret);
 double contourArea(const std::vector<Point2f>& order_pts);
 
 double CalcRotatedIou(const RotatedRect& r1, const RotatedRect& r2);
+
+//! types of intersection between rectangles
+enum RectanglesIntersectTypes {
+    INTERSECT_NONE = 0, //!< No intersection
+    INTERSECT_PARTIAL  = 1, //!< There is a partial intersection
+    INTERSECT_FULL  = 2 //!< One of the rectangle is fully enclosed in the other
+};

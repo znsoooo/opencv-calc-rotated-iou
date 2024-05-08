@@ -1,51 +1,27 @@
-/*M///////////////////////////////////////////////////////////////////////////////////////
-//
-//  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
-//
-//  By downloading, copying, installing or using the software you agree to this license.
-//  If you do not agree to this license, do not download, install,
-//  copy or use the software.
-//
-//
-//                           License Agreement
-//                For Open Source Computer Vision Library
-//
-// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
-// Copyright (C) 2008-2011, Willow Garage Inc., all rights reserved.
-// Third party copyrights are property of their respective owners.
-//
-// @Authors
-//      Nghia Ho, nghiaho12@yahoo.com
-//
-// Redistribution and use in source and binary forms, with or without modification,
-// are permitted provided that the following conditions are met:
-//
-//   * Redistribution's of source code must retain the above copyright notice,
-//     this list of conditions and the following disclaimer.
-//
-//   * Redistribution's in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation
-//     and/or other materials provided with the distribution.
-//
-//   * The name of OpenCV Foundation may not be used to endorse or promote products
-//     derived from this software without specific prior written permission.
-//
-// This software is provided by the copyright holders and contributors "as is" and
-// any express or implied warranties, including, but not limited to, the implied
-// warranties of merchantability and fitness for a particular purpose are disclaimed.
-// In no event shall the OpenCV Foundation or contributors be liable for any direct,
-// indirect, incidental, special, exemplary, or consequential damages
-// (including, but not limited to, procurement of substitute goods or services;
-// loss of use, data, or profits; or business interruption) however caused
-// and on any theory of liability, whether in contract, strict liability,
-// or tort (including negligence or otherwise) arising in any way out of
-// the use of this software, even if advised of the possibility of such damage.
-//
-//M*/
-#include "precomp.hpp"
 
-namespace cv
+#include <math.h>
+#include "rotated_iou.hpp"
+
+void RotatedRect::points(Point2f pt[]) const
 {
+    double _angle = angle*CV_PI/180.;
+    float b = (float)cos(_angle)*0.5f;
+    float a = (float)sin(_angle)*0.5f;
+
+    pt[0].x = center.x - a*size.height - b*size.width;
+    pt[0].y = center.y + b*size.height - a*size.width;
+    pt[1].x = center.x + a*size.height - b*size.width;
+    pt[1].y = center.y - b*size.height - a*size.width;
+    pt[2].x = 2*center.x - pt[0].x;
+    pt[2].y = 2*center.y - pt[0].y;
+    pt[3].x = 2*center.x - pt[1].x;
+    pt[3].y = 2*center.y - pt[1].y;
+}
+
+float normL2Sqr(Point2f pt)
+{
+    return pt.x * pt.x + pt.y * pt.y;
+}
 
 static inline bool _isOnPositiveSide(const Point2f& line_vec, const Point2f& line_pt, const Point2f& pt)
 {
@@ -55,7 +31,7 @@ static inline bool _isOnPositiveSide(const Point2f& line_vec, const Point2f& lin
     return (line_vec.y*(line_pt.x-pt.x) >= line_vec.x*(line_pt.y-pt.y));
 }
 
-static int _rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& rect2, std::vector<Point2f> &intersection )
+int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& rect2, std::vector<Point2f> &intersection )
 {
     CV_INSTRUMENT_REGION();
 
@@ -66,7 +42,7 @@ static int _rotatedRectangleIntersection( const RotatedRect& rect1, const Rotate
     rect2.points(pts2);
 
     // L2 metric
-    float samePointEps = 1e-6f * (float)std::max(rect1.size.area(), rect2.size.area());
+    float samePointEps = 1e-6f;
 
     int ret = INTERSECT_FULL;
 
@@ -139,7 +115,7 @@ static int _rotatedRectangleIntersection( const RotatedRect& rect1, const Rotate
             const float t2 = (vx1*y21 - vy1*x21)*detInvScaled;
 
             // This takes care of parallel lines
-            if( cvIsInf(t1) || cvIsInf(t2) || cvIsNaN(t1) || cvIsNaN(t2) )
+            if( std::isinf(t1) || std::isinf(t2) || std::isnan(t1) || std::isnan(t2) )
             {
                 continue;
             }
@@ -241,8 +217,8 @@ static int _rotatedRectangleIntersection( const RotatedRect& rect1, const Rotate
 
     // Get rid of duplicated points
     const int Nstride = N;
-    cv::AutoBuffer<float, 100> distPt(N * N);
-    cv::AutoBuffer<int> ptDistRemap(N);
+    std::vector<float> distPt(N * N);
+    std::vector<int> ptDistRemap(N);
     for (int i = 0; i < N; ++i)
     {
         const Point2f pt0 = intersection[i];
@@ -250,7 +226,7 @@ static int _rotatedRectangleIntersection( const RotatedRect& rect1, const Rotate
         for (int j = i + 1; j < N; )
         {
             const Point2f pt1 = intersection[j];
-            const float d2 = normL2Sqr<float>(pt1 - pt0);
+            const float d2 = normL2Sqr(pt1 - pt0);
             if(d2 <= samePointEps)
             {
                 if (j < N - 1)
@@ -281,7 +257,7 @@ static int _rotatedRectangleIntersection( const RotatedRect& rect1, const Rotate
                 }
             }
         }
-        CV_Assert(fabs(normL2Sqr<float>(intersection[minI] - intersection[minJ]) - minD) < 1e-6);  // ptDistRemap is not corrupted
+        CV_Assert(fabs(normL2Sqr(intersection[minI], intersection[minJ]) - minD) < 1e-6);  // ptDistRemap is not corrupted
         // drop minJ point
         if (minJ < N - 1)
         {
@@ -310,49 +286,3 @@ static int _rotatedRectangleIntersection( const RotatedRect& rect1, const Rotate
 
     return ret;
 }
-
-int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& rect2, OutputArray intersectingRegion )
-{
-    CV_INSTRUMENT_REGION();
-
-    if (rect1.size.empty() || rect2.size.empty())
-    {
-        intersectingRegion.release();
-        return INTERSECT_NONE;
-    }
-
-    // Shift rectangles closer to origin (0, 0) to improve the calculation of the intesection region
-    // To do that, the average center of the rectangles is moved to the origin
-    const Point2f averageCenter = (rect1.center + rect2.center) / 2.0f;
-
-    RotatedRect shiftedRect1(rect1);
-    RotatedRect shiftedRect2(rect2);
-
-    // Move rectangles closer to origin
-    shiftedRect1.center -= averageCenter;
-    shiftedRect2.center -= averageCenter;
-
-    std::vector <Point2f> intersection; intersection.reserve(24);
-
-    const int ret = _rotatedRectangleIntersection(shiftedRect1, shiftedRect2, intersection);
-
-    // If return is not None, the intersection Points are shifted back to the original position
-    // and copied to the interesectingRegion
-    if (ret != INTERSECT_NONE)
-    {
-        for (size_t i = 0; i < intersection.size(); ++i)
-        {
-            intersection[i] += averageCenter;
-        }
-
-        Mat(intersection).copyTo(intersectingRegion);
-    }
-    else
-    {
-        intersectingRegion.release();
-    }
-
-    return ret;
-}
-
-} // end namespace
