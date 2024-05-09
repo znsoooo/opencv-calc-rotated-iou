@@ -1,3 +1,11 @@
+/*
+    CRI = CalcRotatedIou
+
+    Author: Lishixian
+    Date:   20240509
+*/
+
+
 #include <math.h>
 #include <vector>
 #include <algorithm>
@@ -58,8 +66,11 @@ double contourArea(const std::vector<Point2f>& contour, bool oriented);
 
 // User Interface
 
+// C++ Interface
 double CalcRotatedIou(const RotatedRect& rect1, const RotatedRect& rect2);
-double CalcRotatedIouC(  // CalcRotatedIou C Interface
+
+// C Interface
+double CalcRotatedIouC(
     float cx1, float cy1, float w1, float h1, float a1,  // rect1
     float cx2, float cy2, float w2, float h2, float a2   // rect2
 );
