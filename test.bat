@@ -1,2 +1,2 @@
 @ cls
-@ g++ main.cpp intersection.cpp shapedescr.cpp & a
+@ g++ intersection.cpp shapedescr.cpp main.cpp & a

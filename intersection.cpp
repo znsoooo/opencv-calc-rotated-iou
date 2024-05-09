@@ -1,6 +1,6 @@
-
 #include <math.h>
 #include "rotated_iou.hpp"
+
 
 void RotatedRect::points(Point2f pt[]) const
 {

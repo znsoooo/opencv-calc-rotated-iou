@@ -5,6 +5,7 @@
 #define CV_Assert(...)
 #define CV_INSTRUMENT_REGION()
 
+
 typedef struct {
     int x, y, width, height;
 } Rect;
@@ -42,11 +43,11 @@ public:
     void points(std::vector<Point2f>& pts) const;
 };
 
-int rotatedRectangleIntersection(const RotatedRect& r1, const RotatedRect& r2, std::vector<Point2f>& int_pts);
-int convexHull(const std::vector<Point2f>& int_pts, std::vector<Point2f>& order_pts, bool ret);
-double contourArea(const std::vector<Point2f>& order_pts);
+int rotatedRectangleIntersection(const RotatedRect& rect1, const RotatedRect& rect2, std::vector<Point2f>& intersection);
+double contourArea(const std::vector<Point2f>& contour, bool oriented);
 
-double CalcRotatedIou(const RotatedRect& r1, const RotatedRect& r2);
+double CalcRotatedIou(const RotatedRect& rect1, const RotatedRect& rect2);
+
 
 //! types of intersection between rectangles
 enum RectanglesIntersectTypes {
