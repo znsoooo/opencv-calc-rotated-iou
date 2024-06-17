@@ -1,8 +1,9 @@
 /*
     CRI = CalcRotatedIou
 
-    Author: Lishixian
-    Date:   20240509
+    Author:      Li Shixian
+    Date:        2024-05-09
+    Last update: 2024-06-17
 */
 
 #ifndef __CRI_HEADER__
@@ -33,37 +34,17 @@ typedef struct {
     float width, height;
 } Size2f;
 
-class Point2f
-{
-public:
-    Point2f() = default;
-    Point2f(float _x, float _y) : x(_x),  y(_y) {}
+typedef struct {
+    float x, y;
+} Point2f;
 
-    float x = 0.f;
-    float y = 0.f;
+#define Point2f(x, y) Point2f{x, y}
 
-    Point2f operator-(const Point2f& other) const {
-        return Point2f(x - other.x, y - other.y);
-    }
-
-    float cross(const Point2f& other) const {
-        return x * other.y - y * other.x;
-    }
-};
-
-class RotatedRect
-{
-public:
+typedef struct {
     Point2f center;
     Size2f size;
     float angle;
-
-    void points(Point2f pts[]) const;
-    void points(std::vector<Point2f>& pts) const;
-};
-
-int rotatedRectangleIntersection(const RotatedRect& rect1, const RotatedRect& rect2, std::vector<Point2f>& intersection);
-double contourArea(const std::vector<Point2f>& contour, bool oriented);
+} RotatedRect;
 
 
 // User Interface

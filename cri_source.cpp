@@ -34,21 +34,36 @@ double contourArea( const std::vector<Point2f>& contour, bool oriented )
     return a00;
 }
 
-
-void RotatedRect::points(Point2f pt[]) const
+Point2f Point2f_sub(const Point2f& self, const Point2f& other)
 {
-    double _angle = angle*CV_PI/180.;
-    float b = (float)cos(_angle)*0.5f;
-    float a = (float)sin(_angle)*0.5f;
+    auto x = self.x, y = self.y;
+    return Point2f(x - other.x, y - other.y);
+}
 
-    pt[0].x = center.x - a*size.height - b*size.width;
-    pt[0].y = center.y + b*size.height - a*size.width;
-    pt[1].x = center.x + a*size.height - b*size.width;
-    pt[1].y = center.y - b*size.height - a*size.width;
-    pt[2].x = 2*center.x - pt[0].x;
-    pt[2].y = 2*center.y - pt[0].y;
-    pt[3].x = 2*center.x - pt[1].x;
-    pt[3].y = 2*center.y - pt[1].y;
+float Point2f_cross(const Point2f& self, const Point2f& other) 
+{
+    auto x = self.x, y = self.y;
+    return x * other.y - y * other.x;
+}
+
+void RotatedRect_points(const RotatedRect& self, Point2f pt[])
+{
+    auto center = self.center;
+    auto size = self.size;
+    auto angle = self.angle;
+
+    double _angle = angle * CV_PI / 180.;
+    float b = (float)cos(_angle) * 0.5f;
+    float a = (float)sin(_angle) * 0.5f;
+
+    pt[0].x = center.x - a * size.height - b * size.width;
+    pt[0].y = center.y + b * size.height - a * size.width;
+    pt[1].x = center.x + a * size.height - b * size.width;
+    pt[1].y = center.y - b * size.height - a * size.width;
+    pt[2].x = 2 * center.x - pt[0].x;
+    pt[2].y = 2 * center.y - pt[0].y;
+    pt[3].x = 2 * center.x - pt[1].x;
+    pt[3].y = 2 * center.y - pt[1].y;
 }
 
 float normL2Sqr(Point2f pt)
@@ -71,8 +86,8 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
     Point2f vec1[4], vec2[4];
     Point2f pts1[4], pts2[4];
 
-    rect1.points(pts1);
-    rect2.points(pts2);
+    RotatedRect_points(rect1, pts1);
+    RotatedRect_points(rect2, pts2);
 
     // L2 metric
     float samePointEps = 1e-6f;
@@ -259,7 +274,7 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
         for (int j = i + 1; j < N; )
         {
             const Point2f pt1 = intersection[j];
-            const float d2 = normL2Sqr(pt1 - pt0);
+            const float d2 = normL2Sqr(Point2f_sub(pt1, pt0));
             if(d2 <= samePointEps)
             {
                 if (j < N - 1)
@@ -303,11 +318,11 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
     // order points
     for (int i = 0; i < N - 1; ++i)
     {
-        Point2f diffI = intersection[i + 1] - intersection[i];
+        Point2f diffI = Point2f_sub(intersection[i + 1], intersection[i]);
         for (int j = i + 2; j < N; ++j)
         {
-            Point2f diffJ = intersection[j] - intersection[i];
-            if (diffI.cross(diffJ) < 0)
+            Point2f diffJ = Point2f_sub(intersection[j], intersection[i]);
+            if (Point2f_cross(diffI, diffJ) < 0)
             {
                 std::swap(intersection[i + 1], intersection[j]);
                 diffI = diffJ;
