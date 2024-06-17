@@ -1,6 +1,6 @@
 @echo off
 del test.exe
 cls
-g++ -s cri_source.cpp cri_test.cpp -o test.exe
+g++ -xc cri_source.cpp -xc++ cri_test.cpp -o test.exe
 test.exe
 pause

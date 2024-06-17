@@ -9,6 +9,11 @@
 
 #include "cri_header.hpp"
 
+#define bool char
+#define true 1
+#define false 0
+
+
 typedef struct {
     int x, y, width, height;
 } Rect;
@@ -21,16 +26,11 @@ typedef struct {
     float x, y;
 } Point2f;
 
-#define Point2f(x, y) Point2f{x, y}
-
 typedef struct {
     Point2f center;
     Size2f size;
     float angle;
 } RotatedRect;
-
-// C++ Interface
-double CalcRotatedIou(const RotatedRect& rect1, const RotatedRect& rect2);
 
 
 // area of a whole sequence
@@ -47,7 +47,7 @@ double contourArea(Point2f* contour, int npoints, bool oriented )
         Point2f p = contour[i];
         a00 += (double)prev.x * p.y - (double)prev.y * p.x;
         prev = p;
-    }
+}
 
     a00 *= 0.5;
     if( !oriented )
@@ -56,23 +56,24 @@ double contourArea(Point2f* contour, int npoints, bool oriented )
     return a00;
 }
 
-Point2f Point2f_sub(const Point2f& self, const Point2f& other)
+Point2f Point2f_sub(const Point2f self, const Point2f other)
 {
-    auto x = self.x, y = self.y;
-    return Point2f(x - other.x, y - other.y);
+    float x = self.x, y = self.y;
+    Point2f result = {x - other.x, y - other.y};
+    return result;
 }
 
-float Point2f_cross(const Point2f& self, const Point2f& other) 
+float Point2f_cross(const Point2f self, const Point2f other) 
 {
-    auto x = self.x, y = self.y;
+    float x = self.x, y = self.y;
     return x * other.y - y * other.x;
 }
 
-void RotatedRect_points(const RotatedRect& self, Point2f pt[])
+void RotatedRect_points(const RotatedRect self, Point2f pt[])
 {
-    auto center = self.center;
-    auto size = self.size;
-    auto angle = self.angle;
+    Point2f center = self.center;
+    Size2f size = self.size;
+    float angle = self.angle;
 
     double _angle = angle * CV_PI / 180.;
     float b = (float)cos(_angle) * 0.5f;
@@ -93,7 +94,7 @@ float normL2Sqr(Point2f pt)
     return pt.x * pt.x + pt.y * pt.y;
 }
 
-static inline bool _isOnPositiveSide(const Point2f& line_vec, const Point2f& line_pt, const Point2f& pt)
+static inline bool _isOnPositiveSide(const Point2f line_vec, const Point2f line_pt, const Point2f pt)
 {
     //we are interested by the cross product between the line vector (line_vec) and the line-to-pt vector (pt-line_pt)
     //the sign of the only non-null component of the result determining which side of the line 'pt' is on
@@ -101,7 +102,7 @@ static inline bool _isOnPositiveSide(const Point2f& line_vec, const Point2f& lin
     return (line_vec.y*(line_pt.x-pt.x) >= line_vec.x*(line_pt.y-pt.y));
 }
 
-int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& rect2, Point2f* intersection, int* intersection_size)
+int rotatedRectangleIntersection( const RotatedRect rect1, const RotatedRect rect2, Point2f* intersection, int* intersection_size)
 {
     CV_INSTRUMENT_REGION();
 
@@ -156,10 +157,10 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
     //we adapt the epsilon to the smallest dimension of the rects
     for( int i = 0; i < 4; i++ )
     {
-        samePointEps = std::min(samePointEps, std::sqrt(vec1[i].x*vec1[i].x+vec1[i].y*vec1[i].y));
-        samePointEps = std::min(samePointEps, std::sqrt(vec2[i].x*vec2[i].x+vec2[i].y*vec2[i].y));
+        samePointEps = fmin(samePointEps, sqrt(vec1[i].x*vec1[i].x+vec1[i].y*vec1[i].y));
+        samePointEps = fmin(samePointEps, sqrt(vec2[i].x*vec2[i].x+vec2[i].y*vec2[i].y));
     }
-    samePointEps = std::max(1e-16f, samePointEps);
+    samePointEps = fmax(1e-16f, samePointEps);
 
     // Line test - test all line combos for intersection
     for( int i = 0; i < 4; i++ )
@@ -177,7 +178,7 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
             float vy2 = vec2[j].y;
 
             const float det = vx2*vy1 - vx1*vy2;
-            if (std::abs(det) < 1e-12)//we consider accuracy around 1e-6, i.e. 1e-12 when squared
+            if (fabs(det) < 1e-12)//we consider accuracy around 1e-6, i.e. 1e-12 when squared
               continue;
             const float detInvScaled = 1.f/det;
 
@@ -185,17 +186,17 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
             const float t2 = (vx1*y21 - vy1*x21)*detInvScaled;
 
             // This takes care of parallel lines
-            if( std::isinf(t1) || std::isinf(t2) || std::isnan(t1) || std::isnan(t2) )
+            if( isinf(t1) || isinf(t2) || isnan(t1) || isnan(t2) )
             {
                 continue;
             }
 
             if( t1 >= 0.0f && t1 <= 1.0f && t2 >= 0.0f && t2 <= 1.0f )
             {
-                const float xi = pts1[i].x + vec1[i].x*t1;
-                const float yi = pts1[i].y + vec1[i].y*t1;
-
-                intersection[intersection_size[0]++] = Point2f(xi,yi);
+                const float xi = pts1[i].x + vec1[i].x * t1;
+                const float yi = pts1[i].y + vec1[i].y * t1;
+                Point2f point = {xi, yi};
+                intersection[intersection_size[0]++] = point;
             }
         }
     }
@@ -214,7 +215,7 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
         int posSign = 0;
         int negSign = 0;
 
-        const Point2f& pt = pts1[i];
+        const Point2f pt = pts1[i];
 
         for( int j = 0; j < 4; j++ )
         {
@@ -251,7 +252,7 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
         int posSign = 0;
         int negSign = 0;
 
-        const Point2f& pt = pts2[i];
+        const Point2f pt = pts2[i];
 
         for( int j = 0; j < 4; j++ )
         {
@@ -346,7 +347,9 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
             Point2f diffJ = Point2f_sub(intersection[j], intersection[i]);
             if (Point2f_cross(diffI, diffJ) < 0)
             {
-                std::swap(intersection[i + 1], intersection[j]);
+                Point2f temp = intersection[i + 1];
+                intersection[i + 1] = intersection[j];
+                intersection[j] = temp;
                 diffI = diffJ;
             }
         }
@@ -358,7 +361,7 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
 }
 
 
-double CalcRotatedIou(const RotatedRect& rect1, const RotatedRect& rect2)
+double CalcRotatedIou(const RotatedRect rect1, const RotatedRect rect2)
 {
     double area1 = rect1.size.width * rect1.size.height;
     double area2 = rect2.size.width * rect2.size.height;
@@ -383,8 +386,8 @@ double CalcRotatedIouC(  // CalcRotatedIou C Interface
     float cx1, float cy1, float w1, float h1, float a1,  // rect1
     float cx2, float cy2, float w2, float h2, float a2   // rect2
 ) {
-    RotatedRect rect1 = {Point2f{cx1, cy1}, Size2f{w1, h1}, a1};
-    RotatedRect rect2 = {Point2f{cx2, cy2}, Size2f{w2, h2}, a2};
+    RotatedRect rect1 = {{cx1, cy1}, {w1, h1}, a1};
+    RotatedRect rect2 = {{cx2, cy2}, {w2, h2}, a2};
 
     double iou = CalcRotatedIou(rect1, rect2);
     return iou;
