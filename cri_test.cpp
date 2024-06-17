@@ -5,10 +5,14 @@
 
 void CalcRotatedIouTest()
 {
-    RotatedRect rect1 = {Point2f{2, 2}, Size2f{3, 4}, 30};
-    RotatedRect rect2 = {Point2f{2, 2}, Size2f{4, 3}, 45};
+    // C++ Test
+    // RotatedRect rect1 = {Point2f{2, 2}, Size2f{3, 4}, 30};
+    // RotatedRect rect2 = {Point2f{2, 2}, Size2f{4, 3}, 45};
+    // double iou = CalcRotatedIou(rect1, rect2);
 
-    double iou = CalcRotatedIou(rect1, rect2);
+    // C Test
+    double iou = CalcRotatedIouC(2, 2, 3, 4, 30, 2, 2, 4, 3, 45);
+
     std::cout << "IoU: " << iou << std::endl;
 }
 

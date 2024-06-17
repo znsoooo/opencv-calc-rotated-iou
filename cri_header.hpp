@@ -26,31 +26,8 @@ enum RectanglesIntersectTypes {
 };
 
 
-typedef struct {
-    int x, y, width, height;
-} Rect;
-
-typedef struct {
-    float width, height;
-} Size2f;
-
-typedef struct {
-    float x, y;
-} Point2f;
-
-#define Point2f(x, y) Point2f{x, y}
-
-typedef struct {
-    Point2f center;
-    Size2f size;
-    float angle;
-} RotatedRect;
-
 
 // User Interface
-
-// C++ Interface
-double CalcRotatedIou(const RotatedRect& rect1, const RotatedRect& rect2);
 
 // C Interface
 double CalcRotatedIouC(
