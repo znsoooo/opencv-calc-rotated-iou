@@ -10,7 +10,6 @@
 #define __CRI_HEADER__
 
 #include <math.h>
-#include <vector>
 #include <algorithm>
 
 #define CV_PI 3.1415926535897932384626433832795
@@ -24,7 +23,6 @@ enum RectanglesIntersectTypes {
     INTERSECT_PARTIAL  = 1, //!< There is a partial intersection
     INTERSECT_FULL     = 2  //!< One of the rectangle is fully enclosed in the other
 };
-
 
 
 // User Interface

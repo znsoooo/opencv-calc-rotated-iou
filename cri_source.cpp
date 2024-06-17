@@ -34,9 +34,8 @@ double CalcRotatedIou(const RotatedRect& rect1, const RotatedRect& rect2);
 
 
 // area of a whole sequence
-double contourArea( const std::vector<Point2f>& contour, bool oriented )
+double contourArea(Point2f* contour, int npoints, bool oriented )
 {
-    int npoints = contour.size();
     if( npoints == 0 )
         return 0.;
 
@@ -102,7 +101,7 @@ static inline bool _isOnPositiveSide(const Point2f& line_vec, const Point2f& lin
     return (line_vec.y*(line_pt.x-pt.x) >= line_vec.x*(line_pt.y-pt.y));
 }
 
-int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& rect2, std::vector<Point2f> &intersection )
+int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& rect2, Point2f* intersection, int* intersection_size)
 {
     CV_INSTRUMENT_REGION();
 
@@ -132,7 +131,7 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
 
         if(same)
         {
-            intersection.resize(4);
+            intersection_size[0] = 4;
 
             for( int i = 0; i < 4; i++ )
             {
@@ -196,12 +195,12 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
                 const float xi = pts1[i].x + vec1[i].x*t1;
                 const float yi = pts1[i].y + vec1[i].y*t1;
 
-                intersection.push_back(Point2f(xi,yi));
+                intersection[intersection_size[0]++] = Point2f(xi,yi);
             }
         }
     }
 
-    if( !intersection.empty() )
+    if (intersection_size[0])
     {
         ret = INTERSECT_PARTIAL;
     }
@@ -239,7 +238,7 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
 
         if( posSign == 4 || negSign == 4 )
         {
-            intersection.push_back(pts1[i]);
+            intersection[intersection_size[0]++] = pts1[i];
         }
     }
 
@@ -276,11 +275,11 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
 
         if( posSign == 4 || negSign == 4 )
         {
-            intersection.push_back(pts2[i]);
+            intersection[intersection_size[0]++] = pts2[i];
         }
     }
 
-    int N = (int)intersection.size();
+    int N = intersection_size[0];
     if (N == 0)
     {
         return INTERSECT_NONE;
@@ -288,8 +287,8 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
 
     // Get rid of duplicated points
     const int Nstride = N;
-    std::vector<float> distPt(N * N);
-    std::vector<int> ptDistRemap(N);
+    float distPt[N * N];
+    int ptDistRemap[N];
     for (int i = 0; i < N; ++i)
     {
         const Point2f pt0 = intersection[i];
@@ -316,7 +315,7 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
         float minD = distPt[1];
         for (int i = 0; i < N - 1; ++i)
         {
-            const float* pDist = distPt.data() + Nstride * ptDistRemap[i];
+            const float* pDist = distPt + Nstride * ptDistRemap[i];
             for (int j = i + 1; j < N; ++j)
             {
                 const float d = pDist[ptDistRemap[j]];
@@ -353,7 +352,7 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
         }
     }
 
-    intersection.resize(N);
+    intersection_size[0] = N;
 
     return ret;
 }
@@ -367,10 +366,11 @@ double CalcRotatedIou(const RotatedRect& rect1, const RotatedRect& rect2)
         return 0.0;
     }
 
-    std::vector<Point2f> inter_points;
-    rotatedRectangleIntersection(rect1, rect2, inter_points);
-    if (!inter_points.empty()) {
-        double inter_area = contourArea(inter_points, false);
+    Point2f inter_points[100];
+    int inter_points_size = 0;
+    rotatedRectangleIntersection(rect1, rect2, inter_points, &inter_points_size);
+    if (inter_points_size) {
+        double inter_area = contourArea(inter_points, inter_points_size, false);
         double union_area = area1 + area2 - inter_area;
         double iou = inter_area / union_area;
         return iou;
