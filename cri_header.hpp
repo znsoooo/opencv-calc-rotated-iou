@@ -9,12 +9,10 @@
 #ifndef __CRI_HEADER__
 #define __CRI_HEADER__
 
-#include <math.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define CV_PI 3.1415926535897932384626433832795
-
-#define CV_Assert(...)
-#define CV_INSTRUMENT_REGION()
 
 //! types of intersection between rectangles
 enum RectanglesIntersectTypes {
@@ -26,15 +24,12 @@ enum RectanglesIntersectTypes {
 
 // User Interface
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 // C Interface
 double CalcRotatedIouC(
     float cx1, float cy1, float w1, float h1, float a1,  // rect1
     float cx2, float cy2, float w2, float h2, float a2   // rect2
 );
+
 
 #ifdef __cplusplus
 }

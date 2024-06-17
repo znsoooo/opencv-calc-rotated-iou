@@ -6,8 +6,12 @@
     Last update: 2024-06-17
 */
 
-
+#include <math.h>
 #include "cri_header.hpp"
+
+#define CV_PI 3.1415926535897932384626433832795
+#define CV_Assert(...)
+#define CV_INSTRUMENT_REGION()
 
 #define bool char
 #define true 1

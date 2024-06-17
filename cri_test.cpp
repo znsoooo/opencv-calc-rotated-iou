@@ -1,5 +1,5 @@
+#include <math.h>
 #include <iostream>
-
 #include "cri_header.hpp"
 
 
