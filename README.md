@@ -1,6 +1,6 @@
 # Calc Rotated IoU
 
-A pure C source program for calculating the IoU of two rectangles, base on [opencv-4.9.0](https://github.com/opencv/opencv/tree/4.9.0).
+A pure C source program for calculating the IoU of two rotated rectangles, base on [opencv-4.9.0](https://github.com/opencv/opencv/tree/4.9.0).
 
 
 ## Introduction
