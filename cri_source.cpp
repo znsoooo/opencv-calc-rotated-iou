@@ -37,8 +37,41 @@ typedef struct {
 } RotatedRect;
 
 
+static Point2f Point2f_sub(const Point2f self, const Point2f other)
+{
+    float x = self.x, y = self.y;
+    Point2f result = {x - other.x, y - other.y};
+    return result;
+}
+
+static float Point2f_cross(const Point2f self, const Point2f other) 
+{
+    float x = self.x, y = self.y;
+    return x * other.y - y * other.x;
+}
+
+static void RotatedRect_points(const RotatedRect self, Point2f pt[])
+{
+    Point2f center = self.center;
+    Size2f size = self.size;
+    float angle = self.angle;
+
+    double _angle = angle * CV_PI / 180.;
+    float b = (float)cos(_angle) * 0.5f;
+    float a = (float)sin(_angle) * 0.5f;
+
+    pt[0].x = center.x - a * size.height - b * size.width;
+    pt[0].y = center.y + b * size.height - a * size.width;
+    pt[1].x = center.x + a * size.height - b * size.width;
+    pt[1].y = center.y - b * size.height - a * size.width;
+    pt[2].x = 2 * center.x - pt[0].x;
+    pt[2].y = 2 * center.y - pt[0].y;
+    pt[3].x = 2 * center.x - pt[1].x;
+    pt[3].y = 2 * center.y - pt[1].y;
+}
+
 // area of a whole sequence
-double contourArea(Point2f* contour, int npoints, bool oriented )
+static double contourArea(Point2f* contour, int npoints, bool oriented )
 {
     if( npoints == 0 )
         return 0.;
@@ -60,45 +93,12 @@ double contourArea(Point2f* contour, int npoints, bool oriented )
     return a00;
 }
 
-Point2f Point2f_sub(const Point2f self, const Point2f other)
-{
-    float x = self.x, y = self.y;
-    Point2f result = {x - other.x, y - other.y};
-    return result;
-}
-
-float Point2f_cross(const Point2f self, const Point2f other) 
-{
-    float x = self.x, y = self.y;
-    return x * other.y - y * other.x;
-}
-
-void RotatedRect_points(const RotatedRect self, Point2f pt[])
-{
-    Point2f center = self.center;
-    Size2f size = self.size;
-    float angle = self.angle;
-
-    double _angle = angle * CV_PI / 180.;
-    float b = (float)cos(_angle) * 0.5f;
-    float a = (float)sin(_angle) * 0.5f;
-
-    pt[0].x = center.x - a * size.height - b * size.width;
-    pt[0].y = center.y + b * size.height - a * size.width;
-    pt[1].x = center.x + a * size.height - b * size.width;
-    pt[1].y = center.y - b * size.height - a * size.width;
-    pt[2].x = 2 * center.x - pt[0].x;
-    pt[2].y = 2 * center.y - pt[0].y;
-    pt[3].x = 2 * center.x - pt[1].x;
-    pt[3].y = 2 * center.y - pt[1].y;
-}
-
-float normL2Sqr(Point2f pt)
+static float normL2Sqr(Point2f pt)
 {
     return pt.x * pt.x + pt.y * pt.y;
 }
 
-static inline bool _isOnPositiveSide(const Point2f line_vec, const Point2f line_pt, const Point2f pt)
+static bool _isOnPositiveSide(const Point2f line_vec, const Point2f line_pt, const Point2f pt)
 {
     //we are interested by the cross product between the line vector (line_vec) and the line-to-pt vector (pt-line_pt)
     //the sign of the only non-null component of the result determining which side of the line 'pt' is on
@@ -106,7 +106,7 @@ static inline bool _isOnPositiveSide(const Point2f line_vec, const Point2f line_
     return (line_vec.y*(line_pt.x-pt.x) >= line_vec.x*(line_pt.y-pt.y));
 }
 
-int rotatedRectangleIntersection( const RotatedRect rect1, const RotatedRect rect2, Point2f* intersection, int* intersection_size)
+static int rotatedRectangleIntersection( const RotatedRect rect1, const RotatedRect rect2, Point2f* intersection, int* intersection_size)
 {
     CV_INSTRUMENT_REGION();
 
@@ -365,7 +365,7 @@ int rotatedRectangleIntersection( const RotatedRect rect1, const RotatedRect rec
 }
 
 
-double CalcRotatedIou(const RotatedRect rect1, const RotatedRect rect2)
+static double CalcRotatedIou(const RotatedRect rect1, const RotatedRect rect2)
 {
     double area1 = rect1.size.width * rect1.size.height;
     double area2 = rect2.size.width * rect2.size.height;
