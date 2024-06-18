@@ -1,9 +1,15 @@
 /*
-    CRI = CalcRotatedIou
+
+CRI = CalcRotatedIou
+
+Base on OpenCV-4.9.0
+
+Version:
 
     Author:      Li Shixian
-    Date:        2024-05-09
-    Last update: 2024-06-17
+    Create:      2024-05-09
+    Last update: 2024-06-18
+
 */
 
 #ifndef __CRI_HEADER__

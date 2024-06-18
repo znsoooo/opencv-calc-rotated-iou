@@ -1,10 +1,67 @@
 /*
-    CRI = CalcRotatedIou
+
+CRI = CalcRotatedIou
+====================
+
+    Base on OpenCV-4.9.0
+
+
+Constants
+---------
+
+    RectanglesIntersectTypes:
+        From: "modules\imgproc\include\opencv2\imgproc.hpp"
+
+
+Types
+-----
+
+    Rect, Size2f, Point2f, RotatedRect:
+        From: "modules\core\include\opencv2\core\types.hpp"
+
+
+Functions
+---------
+
+    Point2f_sub:
+        From: "modules\core\include\opencv2\core\types.hpp"
+        See: Point_<_Tp> operator - (const Point_<_Tp>& a, const Point_<_Tp>& b)
+
+    Point2f_cross:
+        From: "modules\core\include\opencv2\core\types.hpp"
+        See: double Point_<_Tp>::cross(const Point_& pt)
+
+    RotatedRect_points:
+        From: "modules\core\src\types.cpp"
+
+    contourArea:
+        From: "modules\imgproc\src\shapedescr.cpp"
+
+    normL2Sqr:
+        From: "modules\core\include\opencv2\core\base.hpp"
+
+    _isOnPositiveSide:
+        From: "modules\imgproc\src\intersection.cpp"
+
+    rotatedRectangleIntersection:
+        From: "modules\imgproc\src\intersection.cpp"
+
+    CalcRotatedIou:
+        From python source file
+
+    CalcRotatedIouC:
+        None
+
+
+Version
+-------
 
     Author:      Li Shixian
-    Date:        2024-05-09
-    Last update: 2024-06-17
+    Create:      2024-05-09
+    Last update: 2024-06-18
+
 */
+
 
 #include <math.h>
 #include "cri_header.hpp"
@@ -44,7 +101,7 @@ static Point2f Point2f_sub(const Point2f self, const Point2f other)
     return result;
 }
 
-static float Point2f_cross(const Point2f self, const Point2f other) 
+static float Point2f_cross(const Point2f self, const Point2f other)
 {
     float x = self.x, y = self.y;
     return x * other.y - y * other.x;
